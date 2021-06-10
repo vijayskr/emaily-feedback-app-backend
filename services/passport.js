@@ -5,15 +5,17 @@ const mongoose = require("mongoose");
 
 const User = mongoose.model("users");
 
-passport.serializeUser((user, done) => { // User is a mongoose model here
-    done(null, user.id);
+passport.serializeUser((user, done) => {
+  // User is a mongoose model here
+  done(null, user.id);
 });
 
-passport.deserializeUser((id, done) => { // id is the userID - convert to mongoose model using this
-    User.findById(id)
-    .then(user => { // User fetched from MongoDB - user instance
-        done(null,user);
-    });
+passport.deserializeUser((id, done) => {
+  // id is the userID - convert to mongoose model using this
+  User.findById(id).then((user) => {
+    // User fetched from MongoDB - user instance
+    done(null, user);
+  });
 });
 
 //Mapping the passport with the Google Statergy to be used in this app
@@ -24,9 +26,9 @@ passport.use(
       clientID: keys.googleAPIClientID,
       clientSecret: keys.googleAPIClientSecret,
       callbackURL: "/auth/google/callback",
-      proxy: true
+      proxy: true,
     },
-    (accessToken, refreshToken, profile, done) => {
+    /* (accessToken, refreshToken, profile, done) => {
       User.findOne({ googleId: profile.id }).then((existingUser) => {
         if (existingUser) {
           //Already having record for the record
@@ -40,6 +42,20 @@ passport.use(
             .then((user) => done(null, user)); // Second instance here as part of chaining function, both refers the same user
         }
       });
+    } */
+    //Refactored the code with async await - clean code
+    async (accessToken, refreshToken, profile, done) => {
+      const existingUser = await User.findOne({ googleId: profile.id });
+      if (existingUser) {
+        //Already having record for the record
+        done(null, existingUser);
+      } else {
+        //Create a new record with the ID
+        const user = await new User({
+          googleId: profile.id, // Creates a new instance for the Mongoose Model
+        }).save();
+        done(null, user); // Second instance here as part of chaining function, both refers the same user
+      }
     }
   )
 );
