@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cokieSession = require('cookie-session');
 const passport = require('passport');
+const cors = require('cors');
 
 const keys = require("./config/keys");
 require("./models/User"); //MongoDB Model Object Reference
@@ -12,6 +13,8 @@ require("./services/passport");
 
 //represents a new Express application running in app object
 const app = express();
+
+app.use(cors);
 
 app.use(
     cokieSession({
